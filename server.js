@@ -1,7 +1,30 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const server = express();
-const port = 3000;
+const PORT = 5000;
+// const { Pool, Client } = require("pg");
 
-server.get("/api", (req, res) => res.send("Hello World!"));
+// const connectionString =
+//   "postgres://postgres:postgres@localhost/usedcarsdealer";
 
-server.listen(port, () => console.log(`Server listening on port ${port}!`));
+// const pool = new Pool({
+//   connectionString: connectionString
+// });
+
+server.use(bodyParser.json());
+server.use(
+  bodyParser.urlencoded({
+    extended: true
+  })
+);
+
+// server.get("/", function(req, res) {
+//   pool.query("SELECT * from samochody", (err, res) => {
+//     console.log(err, res);
+//     pool.end();
+//   });
+// });
+
+server.use("/api", require("./routes/api/cars"));
+
+server.listen(PORT, () => console.log(`Server listening on port ${PORT}!`));
