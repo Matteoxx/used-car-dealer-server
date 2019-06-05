@@ -5,5 +5,6 @@ const db = require("../../queries");
 
 router.get("/cars", db.getCars);
 router.post("/cars/filter", db.getfilteredCars);
+router.post("/auth", db.authenticate);
 
 module.exports = router;
