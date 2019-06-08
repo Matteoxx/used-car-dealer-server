@@ -7,19 +7,28 @@ const pool = new Pool({
   connectionString: connectionString
 });
 
-const getCars = (request, response) => {
-  pool.query("SELECT * from samochody", (err, res) => {
-    if (err) {
-      response.status(500).json({ error: "server error" });
-    }
+const getAvailableCars = (request, response) => {
+  let query =
+    "SELECT * FROM samochody NATURAL JOIN modele_samochodow NATURAL JOIN marki_samochodow WHERE samochody.data_wydania IS NULL";
+  let data = [];
 
-    console.log(res.rows);
-    pool.end();
+  pool.query(query, (err, res) => {
+    if (err) {
+      response.status(500).json({
+        error: {
+          message: "server error"
+        }
+      });
+    } else {
+      res.rows.forEach(row => data.push(row));
+      response.status(200).send(data);
+    }
   });
-  response.status(200).send();
 };
 
 const getfilteredCars = (request, response) => {
+  response.setHeader("Content-Type", "application/json");
+  let data = [];
   let query =
     "SELECT * FROM samochody NATURAL JOIN modele_samochodow NATURAL JOIN marki_samochodow WHERE ";
 
@@ -35,6 +44,15 @@ const getfilteredCars = (request, response) => {
       if (elem.value.from === "" && elem.value.to === "") {
         return;
       }
+
+      if (elem.value.from === "") {
+        elem.value.from = 0;
+      }
+
+      if (elem.value.to === "") {
+        elem.value.to = 999999999;
+      }
+
       strToAdd +=
         elem.name +
         " BETWEEN " +
@@ -52,23 +70,36 @@ const getfilteredCars = (request, response) => {
 
   pool.query(query, (err, res) => {
     if (err) {
-      response.status(500).json({ error: "server error" });
+      response.status(500).json({
+        error: {
+          message: "server error"
+        }
+      });
+    } else {
+      res.rows.forEach(row => data.push(row));
+      response.status(200).send(data);
     }
-    pool.end();
   });
-  response.status(201).json(request.body);
 };
 
 const authenticate = (request, response) => {
   if (!request.body.login || !request.body.passwword) {
-    response.status(400).json({ error: "incorrect login or password" });
+    response.status(400).json({
+      error: {
+        message: "incorrect login or password"
+      }
+    });
   }
 
   let usersData = [];
   let query = "SELECT nazwa_uzytkownika, haslo FROM klienci";
   pool.query(query, (err, res) => {
     if (err) {
-      console.error("error fetching data");
+      response.status(400).json({
+        error: {
+          message: "incorrect login or password"
+        }
+      });
     }
     usersData = res.data;
     pool.end();
@@ -84,7 +115,7 @@ const authenticate = (request, response) => {
 };
 
 module.exports = {
-  getCars,
+  getAvailableCars,
   getfilteredCars,
   authenticate
 };
